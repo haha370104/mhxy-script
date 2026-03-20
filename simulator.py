@@ -9,7 +9,7 @@ def simulate_equipment(gems_per_equip):
     """
     current = gems_per_equip * 10  # 初始属性值
     while True:
-        if current >= 100000:  # 达标条件
+        if current >= 1000000:  # 达标条件
             return True
         if current < 5:  # 损毁条件
             return False
@@ -57,9 +57,9 @@ def calculate_success_rate(player_gems, batch_size, gems_per_equip, sim_times=10
 # ------------------- 示例调用 -------------------
 if __name__ == "__main__":
     # 参数设置（可修改）
-    player_gems = 3000  # 玩家当前宝石总量
-    batch_size = 4  # 每批次装备数量
-    gems_per_equip = 15  # 每件装备初始宝石数
+    player_gems = 3000 * 5 + 0.2 * 50000  # 玩家当前宝石总量
+    batch_size = 1  # 每批次装备数量
+    gems_per_equip = 100  # 每件装备初始宝石数
     sim_times = 10000  # 模拟次数
 
     # 计算并打印成功率

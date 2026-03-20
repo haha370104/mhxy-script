@@ -1,9 +1,19 @@
-from helper.image import get_game_screen, find_img_position, target_window, transform_PIL_to_cv2
+from helper.image import get_game_screen, find_img_position, transform_PIL_to_cv2
+from ascript.windows import window
 from helper.mouse import find_img_click
 from helper.ocr import ocr
 import cv2
 import time
 from functools import reduce
+
+
+all_windows = window.find_all()
+
+target_window = None
+for item in all_windows:
+    if '番茄花园5' in item.title:
+        target_window = item
+game_handler = target_window.hwnd
 
 def move_to_c66():
     find_img_click('picture\\c66.png')

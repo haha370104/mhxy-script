@@ -5,27 +5,19 @@ import os
 import numpy as np
 import cv2
 
-all_windows = window.find_all()
-
-target_window = None
-for item in all_windows:
-    if '番茄花园[358]' in item.title:
-        target_window = item
-
-game_handler = target_window.hwnd
 
 
-def get_game_screen():
-    screen = capture(game_handler)
+def get_game_screen(handler):
+    screen = capture(handler)
     return screen
 
 def get_image(image_name: str):
     image_path = os.path.join(os.path.dirname(__file__), '..\\', image_name)
     return Image.open(image_path)
 
-def find_img_position(img_name: str):
+def find_img_position(img_name: str, source: str=None):
     image_path = os.path.join(os.path.dirname(__file__), '..\\', img_name)
-    result = find_images(image_path, confidence=0.8, res_num=0)
+    result = find_images(image_path, source_file=source, confidence=0.8, res_num=0)
     first_match_point = result[0]['result']
     return first_match_point
 
