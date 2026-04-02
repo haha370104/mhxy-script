@@ -24,8 +24,8 @@ def capture_window_by_hwnd(hwnd):
     width = rect[2] - rect[0]
     height = rect[3] - rect[1]
     if width <= 0 or height <= 0:
-        print("错误：窗口宽度/高度无效")
-        return None
+        bring_window_to_foreground(hwnd)
+        return capture_window_by_hwnd(hwnd)
 
     # 3. 创建内存DC和位图，用于接收窗口图像
     # 获取窗口的DC
@@ -122,7 +122,7 @@ def bring_window_to_foreground(hwnd):
             print(f"失败：窗口 {hwnd} 未成为前台窗口（当前前台：{foreground_hwnd}）")
             return False
     except Exception as e:
-        print(f"调前台失败：{e}")
+        print(f"：调前台失败{e}")
         return False
     finally:
         # 步骤7：解除线程输入附加（避免内存泄漏）
