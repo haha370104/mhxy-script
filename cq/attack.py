@@ -10,10 +10,35 @@ import os
 from helper.capture import capture_window_by_hwnd, bring_window_to_foreground
 from ascript.windows import window
 
-def random_teleport(hwnd):
-    win32gui.SendMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_NUMPAD4, 0)
-    sleep(0.5)
-    win32gui.SendMessage(hwnd, win32con.WM_KEYUP, win32con.VK_NUMPAD4, 0)
+from helper.thread_helper import ReusableWorker
+
+
+def random_teleport(hwnd, threshold=10, key=win32con.VK_NUMPAD4):
+    save_path = os.path.join(os.getcwd(), 'screen_main.png')
+    while True:
+        win32gui.SendMessage(hwnd, win32con.WM_KEYDOWN, key, 0)
+        sleep(0.5)
+        win32gui.SendMessage(hwnd, win32con.WM_KEYUP, key, 0)
+        # sleep(0.5)
+
+        img = capture_window_by_hwnd(hwnd)
+        img.save(save_path)
+        try:
+            match_result = find_images(os.path.join(os.path.dirname(__file__), '..\\picture\\cq\\monster_hp.png'),
+                                       source_file=save_path, confidence=0.95, res_num=0)
+        except Exception as e:
+            match_result = []
+        if len(match_result) > threshold:
+            break
+        else:
+            print('怪太少，重新传送')
+            continue
+
+
+def attack(hwnd):
+    win32gui.SendMessage(hwnd, win32con.WM_KEYDOWN, win32con.VK_F3, 0)
+    # sleep(0.5)
+    # win32gui.SendMessage(hwnd, win32con.WM_KEYUP, win32con.VK_F3, 0)
 
 def check_is_attacking(hwnd, check_times=10, threshold=4):
     save_path = os.path.join(os.getcwd(), 'screen_main.png')
@@ -59,6 +84,8 @@ def check_empty_mp(hwnd):
         return False
 
 def main():
+    attack_thread = None
+
     while True:
         all_windows = window.find_all()
 
@@ -69,7 +96,7 @@ def main():
             if 'Google Chrome' in item.title:
                 chrome_window = item
 
-        sleep_time = 15
+        sleep_time = 10
 
         for item in all_windows:
             if item.title == '健奇3' and item.name == 'WindowsForms10.Window.8.app.0.2804c64_r8_ad1':
@@ -78,6 +105,11 @@ def main():
                     continue
                 target_window = item
                 break
+
+        if attack_thread is None:
+            attack_thread = ReusableWorker(attack, args=[target_window.hwnd], interval=0.5)
+            attack_thread.start()
+
         if check_is_too_far(target_window.hwnd):
             bring_window_to_foreground(hwnd=target_window.hwnd)
             x, y, x2, y2 = win32gui.GetWindowRect(target_window.hwnd)
@@ -89,11 +121,15 @@ def main():
 
         try:
             if not check_is_attacking(target_window.hwnd):
+                attack_thread.pause()
                 print('随机传送')
                 random_teleport(target_window.hwnd)
-                sleep_time = 1
+                attack_thread.resume()
+                sleep_time = 0
         except Exception as e:
-            random_teleport(target_window.hwnd)
+                attack_thread.pause()
+                random_teleport(target_window.hwnd)
+                attack_thread.resume()
         target_time = datetime.now() + timedelta(seconds=sleep_time)
         print('运行，下次执行时间', target_time.strftime('%Y-%m-%d %H:%M:%S'))
         sleep(sleep_time)
