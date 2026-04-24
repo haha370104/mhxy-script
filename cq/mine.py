@@ -20,13 +20,12 @@ def repair(hwnd):
 
 def sell_all(offset_x, offset_y, source):
     select_all_position = find_img_position('picture\\cq\\select_all_button.png', source=source)
-    mouse_move(select_all_position[0]+offset_x, select_all_position[1]+offset_y, duration=0.3)
+    mouse_move(select_all_position[0]+offset_x, select_all_position[1]+offset_y, duration=0)
     click(button='left')
-    sleep(1)
+    sleep(0.1)
     sell_position = find_img_position('picture\\cq\\sell.png', source=source)
-    mouse_move(sell_position[0]+offset_x, sell_position[1]+offset_y, duration=0.3)
+    mouse_move(sell_position[0]+offset_x, sell_position[1]+offset_y, duration=0)
     click(button='left')
-    sleep(1)
 
 def main():
     while True:

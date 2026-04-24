@@ -12,16 +12,35 @@ from ascript.windows import window
 
 from helper.thread_helper import ReusableWorker
 
+from PIL import Image
+
+def crop_center_square(img: Image.Image, wsize=800, hsize=600) -> Image.Image:
+    # 原图宽高
+    w, h = img.size
+    # 中心坐标
+    cx, cy = w // 2, h // 2
+
+    # 计算裁剪框：以中心为准，左右各取 size/2
+    whalf = wsize // 2
+    hhalf = hsize // 2
+    left = cx - whalf
+    top = cy - hhalf
+    right = cx + whalf
+    bottom = cy + hhalf
+
+    # 裁剪
+    return img.crop((left, top, right, bottom))
+
 
 def random_teleport(hwnd, threshold=10, key=win32con.VK_NUMPAD4):
-    save_path = os.path.join(os.getcwd(), 'screen_main.png')
+    save_path = os.path.join(os.getcwd(), 'screen_monster.png')
     while True:
         win32gui.SendMessage(hwnd, win32con.WM_KEYDOWN, key, 0)
         sleep(0.5)
         win32gui.SendMessage(hwnd, win32con.WM_KEYUP, key, 0)
         # sleep(0.5)
 
-        img = capture_window_by_hwnd(hwnd)
+        img = crop_center_square(capture_window_by_hwnd(hwnd))
         img.save(save_path)
         try:
             match_result = find_images(os.path.join(os.path.dirname(__file__), '..\\picture\\cq\\monster_hp.png'),
@@ -29,9 +48,10 @@ def random_teleport(hwnd, threshold=10, key=win32con.VK_NUMPAD4):
         except Exception as e:
             match_result = []
         if len(match_result) > threshold:
+            print('传送结束', len(match_result))
             break
         else:
-            print('怪太少，重新传送')
+            print('怪太少，重新传送', len(match_result))
             continue
 
 
@@ -40,7 +60,7 @@ def attack(hwnd):
     # sleep(0.5)
     # win32gui.SendMessage(hwnd, win32con.WM_KEYUP, win32con.VK_F3, 0)
 
-def check_is_attacking(hwnd, check_times=10, threshold=4):
+def check_is_attacking(hwnd, check_times=11, threshold=4):
     save_path = os.path.join(os.getcwd(), 'screen_main.png')
 
     match_times = 0
@@ -96,12 +116,12 @@ def main():
             if 'Google Chrome' in item.title:
                 chrome_window = item
 
-        sleep_time = 10
+        sleep_time = 8
 
         for item in all_windows:
             if item.title == '健奇3' and item.name == 'WindowsForms10.Window.8.app.0.2804c64_r8_ad1':
 
-                if item.height < 800:
+                if item.width < 1600:
                     continue
                 target_window = item
                 break
@@ -113,7 +133,7 @@ def main():
         if check_is_too_far(target_window.hwnd):
             bring_window_to_foreground(hwnd=target_window.hwnd)
             x, y, x2, y2 = win32gui.GetWindowRect(target_window.hwnd)
-            mouse_move((x2+x)/2, (y2+y)/2)
+            mouse_move((x2+x)//2, (y2+y)//2, duration=0)
             bring_window_to_foreground(chrome_window.hwnd)
 
         # if check_empty_mp(target_window.hwnd):
@@ -132,6 +152,7 @@ def main():
                 attack_thread.resume()
         target_time = datetime.now() + timedelta(seconds=sleep_time)
         print('运行，下次执行时间', target_time.strftime('%Y-%m-%d %H:%M:%S'))
+        win32gui.SendMessage(target_window.hwnd, win32con.WM_KEYDOWN, win32con.VK_NUMPAD3, 0)
         sleep(sleep_time)
 
 
